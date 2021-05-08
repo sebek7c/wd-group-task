@@ -1,0 +1,131 @@
+schema {
+  query: RootQueryType
+  mutation: RootMutationType
+  subscription: RootSubscriptionType
+}
+
+"""
+Direct the client to resolve this field locally, either from the cache or local resolvers.
+"""
+directive @client(
+  """
+  When true, the client will never use the cache for this value. See
+  https://www.apollographql.com/docs/react/essentials/local-state/#forcing-resolvers-with-clientalways-true
+  """
+  always: Boolean
+) on FIELD | FRAGMENT_DEFINITION | INLINE_FRAGMENT
+
+"""
+Export this locally resolved field as a variable to be used in the remainder of this query. See
+https://www.apollographql.com/docs/react/essentials/local-state/#using-client-fields-as-variables
+"""
+directive @export(
+  """The variable name to export this field as."""
+  as: String!
+) on FIELD
+
+"""
+Specify a custom store key for this result. See
+https://www.apollographql.com/docs/react/advanced/caching/#the-connection-directive
+"""
+directive @connection(
+  """Specify the store key."""
+  key: String!
+
+  """
+  An array of query argument names to include in the generated custom store key.
+  """
+  filter: [String!]
+) on FIELD
+
+"""Chatly message"""
+type Message {
+  body: String
+  id: ID
+  insertedAt: String
+
+  """Author of the message"""
+  user: UserType
+}
+
+type RootMutationType {
+  """Log in to the Chatly and receive back the token"""
+  loginUser(email: String!, password: String!): SessionType
+
+  """ADMIN ONLY | Create new Chatly room"""
+  newRoom(name: String!): RoomType
+
+  """Register a new Chatly app user"""
+  registerUser(email: String!, firstName: String!, lastName: String!, password: String!, passwordConfirmation: String!): UserType
+
+  """Send a new message in a given room"""
+  sendMessage(body: String!, roomId: String!): Message
+
+  """Set typing user"""
+  typingUser(roomId: String!): UserType
+}
+
+type RootQueryType {
+  """Get Chatly room by ID"""
+  room(id: ID!): RoomType
+
+  """ADMIN ONLY | Get all available Chatly rooms"""
+  rooms: [SingleRoomType]
+
+  """Get current Chatly user data"""
+  user: UserType
+
+  """ADMIN ONLY | Get all Chatly app users"""
+  users: [UserType]
+
+  """Get Chatly rooms created by given user (token)"""
+  usersRooms: RoomsType
+}
+
+"""Chatly room and user that created it"""
+type RoomType {
+  id: String
+  messages: [Message]
+  name: String
+  roomPic: String
+  user: UserType
+}
+
+"""Chatly rooms for a given user"""
+type RoomsType {
+  rooms: [SingleRoomType]
+  user: UserType
+}
+
+"""Chatly session data"""
+type SessionType {
+  token: String
+  user: UserType
+}
+
+"""Chatly single room"""
+type SingleRoomType {
+  id: String
+  name: String
+  roomPic: String
+}
+
+type RootSubscriptionType {
+  """Get notified whenever there is a new message in a given room"""
+  messageAdded(roomId: String!): Message
+
+  """
+  Get the name of the user that is currently typing something in a given room
+  """
+  typingUser(roomId: String!): UserType
+}
+
+"""Chatly user"""
+type UserType {
+  email: String
+  firstName: String
+  id: ID
+  lastName: String
+  profilePic: String
+  role: String
+}
