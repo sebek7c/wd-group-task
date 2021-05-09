@@ -4,7 +4,7 @@ const styles = StyleSheet.create({
     container: {
         display: 'flex',
         alignItems: 'flex-start',
-        backgroundColor:'#5603AD',
+        backgroundColor:'white',
         padding: 16,
         marginTop: 8,
         marginBottom: 8,
@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
     },
 
     text: {
-        color: 'white',
+        color: '#455A64',
         marginLeft: 8,
     },
 
