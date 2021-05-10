@@ -28,8 +28,8 @@ const httpLink = createHttpLink({
 const token =
 	'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJjaGF0bHkiLCJleHAiOjE2MjI0OTY4NDcsImlhdCI6MTYyMDA3NzY0NywiaXNzIjoiY2hhdGx5IiwianRpIjoiZjEyYjFiNDYtZTFiNi00YmNlLWFkYzEtYjhmNDY3ZTQ5NGZjIiwibmJmIjoxNjIwMDc3NjQ2LCJzdWIiOiI1MWQ4MGVhYi01MzRmLTQ3OGQtOTY0YS1lZjY4ZmQ1NmE1NzAiLCJ0eXAiOiJhY2Nlc3MifQ.vhASxWwxr0HELY_i3Z2WTASSXjraXbChmRlF8bdsHp-JAg9vwZ4T9MVGFkqsVZSaptRyrKEC4XS_rKCCXJPoIA';
 
-const phoenixSocket = new PhoenixSocket('ws://localhost:4000/socket', {
-	params: () => { return token},
+const phoenixSocket = new PhoenixSocket('wss://chat.thewidlarzgroup.com/socket', {
+	params: { token }
 });
 const absintheSocket = AbsintheSocket.create(phoenixSocket);
 const wsLink = createAbsintheSocketLink(absintheSocket);

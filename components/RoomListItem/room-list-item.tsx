@@ -1,12 +1,13 @@
 import React, { FC } from 'react';
 import { View, Text, Image} from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { SingleRoomType } from '../../types/types';
+import { SingleRoomType, UserType } from '../../types/types';
 import styles from './styles';
 import { useNavigation } from '@react-navigation/native';
 
 interface RoomListItemProps {
 	room: SingleRoomType;
+	user: UserType;
 }
 
 const RoomListItem: FC<RoomListItemProps> = (props): JSX.Element => {
@@ -14,7 +15,7 @@ const RoomListItem: FC<RoomListItemProps> = (props): JSX.Element => {
     const navigation = useNavigation();
 
 	return (
-		<TouchableOpacity onPress={() => navigation.navigate('Chat')}>
+		<TouchableOpacity onPress={() => navigation.navigate('Chat', { roomId: props.room.id, user: props.user})}>
 			<View style={styles.container}>
 				<View style={styles.roomDetails}>
 					<Image

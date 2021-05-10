@@ -1,19 +1,19 @@
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client';
 
 export const GET_ROOMS = gql`
-{
-    usersRooms {
-        user{
-            email
-            firstName
-            lastName
-            id
-            role
-        }
-        rooms {
-            id
-            name
-        }
-    }
-}
-`
+	{
+		usersRooms {
+			user {
+				email
+				firstName
+				lastName
+				id
+				role
+			}
+			rooms {
+				id
+				name
+			}
+		}
+	}
+`;

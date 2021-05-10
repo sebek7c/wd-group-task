@@ -14,7 +14,7 @@ export interface UserType {
 
 
 export interface SingleRoomType {
-    id: String
+    id: any
     name: String
     roomPic: String
 }

@@ -1,86 +1,106 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
-import { Bubble, GiftedChat, Send } from 'react-native-gifted-chat';
-import { SEND_MESSAGE } from '../graphql/mutations/SEND_MESSAGE'
-import { useMutation } from '@apollo/client';
+import { View, StyleSheet, Image, Text } from 'react-native';
+import { GiftedChat, Send, Bubble } from 'react-native-gifted-chat';
+import { SEND_MESSAGE } from '../graphql/mutations/SEND_MESSAGE';
+import { useMutation, useQuery, useSubscription } from '@apollo/client';
+import { MESSAGES_SUBSCRIPTION } from '../graphql/subscriptions/MESSAGES_SUBSCRIPTION';
+import { IS_TYPING_SUBSCRIPTION } from '../graphql/subscriptions/IS_TYPING_SUBSCRIPTION';
+import { GET_MESSAGES } from '../graphql/queries/GET_MESSAGES';
+import { GET_ROOM } from '../graphql/queries/GET_ROOM';
+import { useNavigation } from '@react-navigation/native';
 
-const ChatScreen = () => {
-	const [messageBody, setMessageBody] = useState('');
+const ChatScreen = ({ route }: any) => {
+	const [messages, setMessages] = useState([]);
+	const [messageContent, setMessageContent] = useState('');
+	const [isTyping, setIsTyping] = useState(false);
+	const navigation = useNavigation();
+	const { roomId, user } = route.params;
 
-	// const [sendMessage] = useMutation(SEND_MESSAGE);
+	const [sendMessage] = useMutation(SEND_MESSAGE);
 
-	// useEffect(() => {
-	// 	setMessages([
-	// 		{
-	// 			_id: 1,
-	// 			text: 'Hello developer',
-	// 			createdAt: new Date(),
-	// 			user: {
-	// 				_id: 2,
-	// 				name: 'React Native',
-	// 				avatar: 'https://placeimg.com/140/140/any',
-	// 			},
-	// 		},
-	// 		{
-	// 			_id: 2,
-	// 			text: 'Hello world',
-	// 			createdAt: new Date(),
-	// 			user: {
-	// 				_id: 1,
-	// 				name: 'React Native',
-	// 				avatar: 'https://placeimg.com/140/140/any',
-	// 			},
-	// 		},
-	// 	]);
-	// }, []);
+	const { data: typingData, loading: typingLoading } = useSubscription(
+		IS_TYPING_SUBSCRIPTION,
+		{
+			variables: { roomId: roomId },
+		}
+	);
 
-	// const onSend = useCallback((messages = []) => {
-	// 	setMessages((previousMessages) =>
-	// 		GiftedChat.append(previousMessages, messages)
-	// 	);
-	// }, []);
+	const { data, loading } = useSubscription(MESSAGES_SUBSCRIPTION, {
+		variables: { roomId: roomId },
+	});
 
-	const renderSend = (props: any) => {
-		return (
-			<Send {...props}>
-				<View>
-					<Image
-						source={require('../assets/send.png')}
-						style={{height: 40, width: 40 }}
-					/>
-				</View>
-			</Send>
-		);
-	};
+	const {
+		data: messagesData,
+		loading: messagesLoading,
+		subscribeToMore,
+	} = useQuery(GET_MESSAGES, {
+		variables: { id: roomId },
+	});
 
-	const renderBubble = (props: any) => {
-		return (
-			<Bubble
-				{...props}
-				wrapperStyle={{
-					right: {
-						backgroundColor: '#2e64e5',
+	const { data: roomData, loading: roomLoading } = useQuery(GET_ROOM, {
+		variables: { id: roomId },
+	});
+
+	useEffect(() => {
+		const unsubscribe = subscribeToMore({
+			document: MESSAGES_SUBSCRIPTION,
+			variables: { roomId: roomId },
+			updateQuery: (prev, { subscriptionData }) => {
+				if (!subscriptionData.data) return prev;
+				const newMessageAdded = subscriptionData.data.messageAdded;
+				return {
+					room: {
+						messages: [...prev.room.messages, newMessageAdded],
 					},
-				}}
-				textStyle={{
-					right: {
-						color: '#fff',
-					},
-				}}
-			/>
-		);
-	};
+				};
+			},
+		});
+
+		return unsubscribe;
+	}, []);
+
+	useEffect(() => {
+		if (!messagesLoading) {
+			const giftedChatMessages = messagesData.room.messages.map(
+				(chatMessage: any) => {
+					let gcm = {
+						_id: chatMessage.id,
+						text: chatMessage.body,
+						createdAt: chatMessage.insertedAt,
+						user: {
+							_id: chatMessage.id,
+							name: chatMessage.name,
+							avatar: chatMessage.profilePic,
+						},
+					};
+					return gcm;
+				}
+			);
+			setMessages(giftedChatMessages.reverse());
+		}
+	}, [messagesData, data]);
+
+	useEffect(() => {
+		if (!roomLoading) {
+			navigation.setOptions({
+				title: roomData.room.name,
+			});
+		}
+	}, [roomData]);
 
 	return (
 		<GiftedChat
-			// onSend={() => sendMessage({ variables: { body: messageBody  } })}
-			user={{
-				_id: 1,
-			}}
+			messages={messages}
+			onSend={() =>
+				sendMessage({ variables: { body: messageContent, roomId: roomId } })
+			}
+			user={{ _id: 1, name: user.firstName }}
 			renderBubble={renderBubble}
 			alwaysShowSend
-			renderSend={renderSend}
 			scrollToBottom
+			text={messageContent}
+			onInputTextChanged={(text) => setMessageContent(text)}
+			isTyping={true}
 		/>
 	);
 };
@@ -94,3 +114,21 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 	},
 });
+
+const renderBubble = (props: any) => {
+	return (
+		<Bubble
+			{...props}
+			wrapperStyle={{
+				left: {
+					backgroundColor: '#d0d4f6',
+				},
+			}}
+			textStyle={{
+				left: {
+					color: 'black',
+				},
+			}}
+		/>
+	);
+};

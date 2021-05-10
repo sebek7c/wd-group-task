@@ -10,13 +10,12 @@ export default function Rooms() {
 	const { data, loading } = useQuery<UsersRoomsDataType>(GET_ROOMS);
 
 	if (loading) return <Text>Loading</Text>;
-	console.log(data)
 
 
 	return (
 		<View style={styles.container}>
 			{data ? data.usersRooms.rooms.map((room: SingleRoomType) => {
-				return <RoomListItem room={room} />;
+				return <RoomListItem key={room.id} room={room} user={data.usersRooms.user} />;
 			}) : null }
 		</View>
 	);
